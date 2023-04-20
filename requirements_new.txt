@@ -34,7 +34,9 @@ openssl=1.1.1t=h7f8727e_0
 pip=23.0.1=py38h06a4308_0
 pyasn1=0.5.0=pypi_0
 pyasn1-modules=0.3.0=pypi_0
+pydot=1.4.2=pypi_0
 python=3.8.16=h7a1cb2a_3
+python-graphviz=0.20.1=pypi_0
 readline=8.2=h5eee18b_0
 setuptools=66.0.0=py38h06a4308_0
 six=1.16.0=pypi_0
