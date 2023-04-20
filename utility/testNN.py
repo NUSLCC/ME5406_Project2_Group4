@@ -30,17 +30,18 @@ class Model(nn.Module):
                 nn.Softmax(dim=-1)
             )
         self.critic = nn.Sequential(
-                            nn.Conv2d(1, 32, kernel_size=8, stride=4),
+                            nn.Conv2d(1, 16, kernel_size=8, stride=4),
                             nn.Tanh(),
-                            nn.Conv2d(32, 20, kernel_size=4, stride=4),
+                            nn.Conv2d(16, 5, kernel_size=2, stride=4),
                             # nn.Tanh(),
-                            # nn.Conv2d(81, 27, kernel_size=3, stride=1),
+                            nn.Conv2d(5, 1, kernel_size=5, stride=1),
                             # nn.Linear(7, 7),
                             # nn.Tanh(),
-                            nn.Linear(5, 40),
+                            # nn.Linear(1, 1),
                             nn.Flatten(0),
                             nn.Softmax(dim=-1)
                         )
+        self.critic.float()
     def forward(self, x):
         for layer in self.critic:
             x = layer(x)
@@ -49,7 +50,7 @@ class Model(nn.Module):
 
 
 model = Model()
-x = torch.randn(1,84,84)
+x = torch.randn(1000,1,84,84)
 
 # Let's print it
 model(x)
