@@ -7,7 +7,11 @@ import torch
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
+from collections import deque
+import random
+import numpy as np
 
+MINIBATCH_SIZE = 1000
 ################################## set device ##################################
 print("============================================================================================")
 # set device to cpu or cuda
@@ -23,21 +27,23 @@ print("=========================================================================
 
 ################################## PPO Policy ##################################
 class RolloutBuffer:
+    
     def __init__(self):
-        self.actions = []
-        self.states = []
-        self.logprobs = []
-        self.rewards = []
-        self.state_values = []
-        self.is_terminals = []
+        self.replay_buffer_size = 10000
+        self.actions = deque(maxlen=self.replay_buffer_size)
+        self.states = deque(maxlen=self.replay_buffer_size)
+        self.logprobs = deque(maxlen=self.replay_buffer_size)
+        self.rewards = deque(maxlen=self.replay_buffer_size)
+        self.state_values = deque(maxlen=self.replay_buffer_size)
+        self.is_terminals = deque(maxlen=self.replay_buffer_size)
     
     def clear(self):
-        del self.actions[:]
-        del self.states[:]
-        del self.logprobs[:]
-        del self.rewards[:]
-        del self.state_values[:]
-        del self.is_terminals[:]
+        self.actions.clear()
+        self.states.clear()
+        self.logprobs.clear()
+        self.rewards.clear()
+        self.state_values.clear()
+        self.is_terminals.clear()
 
 
 class ActorCritic(nn.Module):
@@ -63,13 +69,14 @@ class ActorCritic(nn.Module):
             )
         # Critic Network
         self.critic = nn.Sequential(
-                nn.Conv2d(1, 32, kernel_size=8, stride=4),
-                nn.Tanh(),
-                nn.Conv2d(32, 20, kernel_size=4, stride=4),
-                nn.Linear(5, 10),
-                nn.Flatten(0),
-                # nn.Softmax(dim=-1)
-            )
+                    nn.Conv2d(1, 16, kernel_size=8, stride=4),
+                    nn.Tanh(),
+                    nn.Conv2d(16, 5, kernel_size=2, stride=4),
+                    nn.Conv2d(5, 1, kernel_size=5, stride=1),
+                    nn.Flatten(0),
+                    nn.Softmax(dim=-1)
+                )
+        self.critic.float()
 
     def set_action_std(self, new_action_std):
         if self.has_continuous_action_space:
@@ -95,10 +102,8 @@ class ActorCritic(nn.Module):
 
         action = dist.sample()
         action_logprob = dist.log_prob(action)
-        # print(state.view(state.size(0), -1))
         
         state_val = self.critic(state)
-        # import pdb; pdb.set_trace();
 
         return action.detach(), action_logprob.detach(), state_val.detach()
     
@@ -119,13 +124,13 @@ class ActorCritic(nn.Module):
             # then do the categtorch.nan_to_num(orical on it. 
             # import pdb; pdb.set_trace();
             # torch.unsqueeze(state[0], dim=0).shape
-            action_probs = self.actor(torch.unsqueeze(state, dim=0))
+            action_probs = self.actor(torch.unsqueeze(state, dim=1))
             dist = Categorical(action_probs)
 
         action_logprobs = dist.log_prob(action)
         dist_entropy = dist.entropy()
         # import pdb; pdb.set_trace()
-        state_values = self.critic(torch.unsqueeze(state, dim=0))
+        state_values = self.critic(torch.unsqueeze(state, dim=1))
         
         return action_logprobs, state_values, dist_entropy
 
@@ -141,6 +146,7 @@ class PPO:
         self.gamma = gamma
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
+        self.minibatch_size = MINIBATCH_SIZE
         
         self.buffer = RolloutBuffer()
 
@@ -153,7 +159,7 @@ class PPO:
         self.policy_old = ActorCritic(state_dim, action_dim, has_continuous_action_space, action_std_init).to(device)
         self.policy_old.load_state_dict(self.policy.state_dict())
         
-        self.MseLoss = nn.MSELoss()
+        self.MseLoss = nn.MSELoss().float()
 
     def set_action_std(self, new_action_std):
         if self.has_continuous_action_space:
@@ -194,6 +200,25 @@ class PPO:
         # print(action)
         # return action.item()
         return action[0]
+    
+    def sample_minibatch(self):
+        list_of_samples_with_index = random.sample(list(enumerate(self.buffer.states)), self.minibatch_size)
+        # minibatch = random.sample(self.buffer.states, self.minibatch_size)
+        # The format of each transition is (state, action, reward, next_state, done)
+        states = []
+        actions = []
+        logprobs = []
+        state_values = []
+        rewards = []
+        is_terminals = []
+        for i, tensor_ in list_of_samples_with_index:
+            states.append(tensor_)
+            actions.append(self.buffer.actions[i])
+            logprobs.append(self.buffer.logprobs[i])
+            state_values.append(self.buffer.state_values[i])
+            rewards.append(self.buffer.rewards[i])
+            is_terminals.append(self.buffer.is_terminals[i])
+        return states, actions, logprobs, state_values, rewards, is_terminals
 
     def update(self):
         # Monte Carlo estimate of returns
@@ -208,13 +233,15 @@ class PPO:
         # Normalizing the rewards
         rewards = torch.tensor(rewards, dtype=torch.float32).to(device)
         # rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
-
+        states, actions, logprobs, state_values, rewards, is_terminals = self.sample_minibatch()
         # convert list to tensor
-        old_states = torch.squeeze(torch.stack(self.buffer.states, dim=0)).detach().to(device)
-        old_actions = torch.squeeze(torch.stack(self.buffer.actions, dim=0)).detach().to(device)
-        old_logprobs = torch.squeeze(torch.stack(self.buffer.logprobs, dim=0)).detach().to(device)
-        old_state_values = torch.squeeze(torch.stack(self.buffer.state_values, dim=0)).detach().to(device)
         
+        old_states = torch.squeeze(torch.stack(states, dim=0)).detach().to(device)
+        old_actions = torch.squeeze(torch.stack(actions, dim=0)).detach().to(device)
+        old_logprobs = torch.squeeze(torch.stack(logprobs, dim=0)).detach().to(device)
+        old_state_values = torch.squeeze(torch.stack(state_values, dim=0)).detach().to(device)
+        rewards = torch.tensor(rewards).detach().to(device)
+        old_state_values = torch.tensor(old_state_values).detach().to(device)
         # calculate advantages
         advantages = rewards.detach() - old_state_values.detach()
 
@@ -225,6 +252,7 @@ class PPO:
             logprobs, state_values, dist_entropy = self.policy.evaluate(old_states, old_actions)
 
             # match state_values tensor dimensions with rewards tensor
+            # import pdb; pdb.set_trace();
             state_values = torch.squeeze(state_values)
             
             # Finding the ratio (pi_theta / pi_theta__old)
@@ -235,7 +263,7 @@ class PPO:
             surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
 
             # final loss of clipped objective PPO
-            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy
+            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values.float(), rewards.float()) - 0.01 * dist_entropy
             
             # take gradient step
             self.optimizer.zero_grad()
