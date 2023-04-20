@@ -1,3 +1,5 @@
 PPO_logs/
+DDPG_logs/
 __pycache__/
 PPO_preTrained/
+DDPG_preTrained/
