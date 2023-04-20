@@ -10,6 +10,8 @@ from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
 import tensorflow as tf
 from env import Env, NUM_ACTIONS
+import numpy as np
+from collections import deque
 
 ################################## set device ##################################
 # set device to cpu or cuda
@@ -26,6 +28,7 @@ REPLACEMENT = [
 ][0]            # you can try different target replacement strategies
 MEMORY_CAPACITY = 10000
 BATCH_SIZE = 32
+epsilon = 1.0
 ################################## set device ##################################
 
 class RolloutBuffer:
@@ -140,26 +143,66 @@ class Critic(nn.Module):
 
 
 class DDPG:
+    def __init__(self, state_shape):
+        self.env = Env()
+        self.env.is_binary = True
+        self.state_shape = state_shape
+        self.num_actions = NUM_ACTIONS
+        self.learning_rate = 0.025
+        self.gamma = 0.99
+        self.epsilon = 1.0
+        self.epsilon_min = 0.1
+        self.epsilon_decay_rate = 0.99
+        self.replay_buffer_size = 10000
+        self.minibatch_size = 32
+        self.online_model = self.build_model()
+        self.target_model = self.build_model()
+        self.online_model_update_interval = 10
+        self.target_model_update_interval = 100
+        self.replay_buffer = deque(maxlen=self.replay_buffer_size)
+        self.next_state, self.reward, self.done = Env.step(self.action)
+        self.s_dim = []
+        self.a_dim = []
+    def get_action(self, state):
+        if np.random.rand() < epsilon:
+            return np.random.randint(NUM_ACTIONS)
+        else:
+            # Add one dimension to the states as the input shape should be (none, width, height, num_frames)
+            state_add_none = np.expand_dims(state, axis=0)
+            predicted_Q_values = self.online_model.predict(state_add_none)
+            Q_values_list = predicted_Q_values[0]
+            return np.argmax(Q_values_list)
+        
     def __init__(self, state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip, has_continuous_action_space, action_std_init=0.6):
         self.has_continuous_action_space = has_continuous_action_space
-        self.state, _, _ = Env.step(self, action=1)
-        self.target_pos = Env.__init__.target_pose()
-        self.state_ = state
-        self.q = 0    # q value for learning
         if has_continuous_action_space:
             self.action_std = action_std_init
+        self.env = Env()
+
+        self.save_path = "/home/zheng/me5406_group4/me5406_part2/me5406-project-2/src/me5406/src/"
+        self.state = Env().get_observation
+        self.action = self.get_action(self.state)
+        self.next_state, self.reward, self.done = self.env.step(self.action)
+        
+        self.policy = Actor(state_dim, action_dim, has_continuous_action_space, action_std_init).to(device) 
+        self.target_q = self._build_net_q(self.next_state, self.policy, 'target_net', trainable=False)  # for target q
+        self.eva_q = self._build_net_q(self.next_state, self.policy, 'target_net', trainable=True)
+        # self.TD_error = self.eva_q - self.target_q
+        # for eval q
+        # self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
+        # self.loss = tf.reduce_mean(tf.squared_difference(self.target_q, self.q))   # TD error
+        self.value = Critic(state_dim, action_dim, has_continuous_action_space, action_std_init).to(device)
+       
+        
         
         self.gamma = gamma
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
         self.buffer = RolloutBuffer()
 
-        self.policy = Actor(state_dim, action_dim, has_continuous_action_space, action_std_init).to(device)
-        self.target_q = self.critic_target_net(state, self.policy) 
-        self.target_q = self._build_net_q(self.state_, self.policy, 'target_net', trainable=False)  # for target q
-        self.eva_q = self._build_net_q(self.state_, self.policy, 'target_net', trainable=True)   # for eval q
-        self.loss = tf.reduce_mean(tf.squared_difference(self.target_q, self.q))   # TD error
-        self.value = Critic(state_dim, action_dim, has_continuous_action_space, action_std_init).to(device)
+         
+        
+        
         
 
 
@@ -173,38 +216,37 @@ class DDPG:
 
 
 
-        state, _, _ = Env.step()
-
     def _build_net_q(self, s, a, scope, trainable):
-        with tf.variable_scope(scope):
-            init_w = tf.random_normal_initializer(0., 0.1)
-            init_b = tf.constant_initializer(0.1)
+        q = nn.Sequential(
+        nn.Conv2d(4, 32, kernel_size=8, stride=4),
+        nn.Tanh(),
+        nn.Conv2d(32, 20, kernel_size=4, stride=4),
+        nn.Linear(5, 10),
+        nn.Flatten(0),)
 
-            with tf.variable_scope('l1'):
-                n_l1 = 30
-                w1_s = tf.get_variable('w1_s', [self.s_dim, n_l1], initializer=init_w, trainable=trainable)
-                w1_a = tf.get_variable('w1_a', [self.a_dim, n_l1], initializer=init_w, trainable=trainable)
-                b1 = tf.get_variable('b1', [1, n_l1], initializer=init_b, trainable=trainable)
-                net = tf.nn.relu(tf.matmul(s, w1_s) + tf.matmul(a, w1_a) + b1)
-
-            with tf.variable_scope('q'):
-                q = tf.layers.dense(net, 1, kernel_initializer=init_w, bias_initializer=init_b, trainable=trainable)   # Q(s,a)
+        # q = tf.layers.dense(net, 1, kernel_initializer=init_w, bias_initializer=init_b, trainable=trainable)   # Q(s,a)
         return q
 
     def _build_net_a(self, s, scope, trainable):
-        with tf.variable_scope(scope):
-            init_w = tf.random_normal_initializer(0., 0.3)
-            init_b = tf.constant_initializer(0.1)
-            net = tf.layers.dense(s, 30, activation=tf.nn.relu,
-                                  kernel_initializer=init_w, bias_initializer=init_b, name='l1',
-                                  trainable=trainable)
-            with tf.variable_scope('a'):
-                actions = tf.layers.dense(net, self.a_dim, activation=tf.nn.tanh, kernel_initializer=init_w,
-                                          bias_initializer=init_b, name='a', trainable=trainable)
-                scaled_a = tf.multiply(actions, self.action_bound, name='scaled_a')  # Scale output to -action_bound to action_bound
+        actions = nn.Sequential(
+        nn.Conv2d(4, 32, kernel_size=8, stride=4),
+        nn.Tanh(),
+        nn.Conv2d(32, 20, kernel_size=4, stride=4),
+        nn.Linear(5, 10),
+        nn.Flatten(0),)
+        # with tf.variable_scope(scope):
+        #     init_w = tf.random_normal_initializer(0., 0.3)
+        #     init_b = tf.constant_initializer(0.1)
+        #     net = tf.layers.dense(s, 30, activation=tf.nn.relu,
+        #                           kernel_initializer=init_w, bias_initializer=init_b, name='l1',
+        #                           trainable=trainable)
+        #     with tf.variable_scope('a'):
+        # actions = tf.layers.dense(activation=tf.nn.tanh,
+                                        #   name='a', trainable=trainable)
+        scaled_a = tf.multiply(actions, self.action_bound, name='scaled_a')  # Scale output to -action_bound to action_bound
         return scaled_a
 
-    def critic_target_net(policy):  ## get target q
+    def critic_target_net(next_state, policy):  ## get target q
         R = Env.get_reward()
         target_q = R + GAMMA * self.q
         # nn.Conv2d(4, 32, kernel_size=8, stride=4),

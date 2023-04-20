@@ -39,11 +39,13 @@ class Env:
         self.height     = IMAGE_HEIGHT
         self.num_frames = NUM_FRAMES
         self.num_channels = NUM_CHANNELS_RGB
-        self.client     = p.connect(p.GUI)
+        # self.client     = p.connect(p.GUI)
+        self.client = p.connect(p.DIRECT)
+
         self.gravity    = p.setGravity(0, 0, -9.81)
-        self.plane      = p.loadURDF("/home/lcc/me5406_part2/me5406-project-2/urdf/data/plane100.urdf")
-        self.robot      = p.loadURDF("/home/lcc/me5406_part2/me5406-project-2/urdf/data/r2d2.urdf", TARGET_START_POSE.copy(), useFixedBase=False)
-        self.redball    = p.loadURDF("/home/lcc/me5406_part2/me5406-project-2/urdf/data/sphere2red.urdf", [0,0,0.5])
+        self.plane      = p.loadURDF("/home/zheng/bullet3/data/plane_with_restitution.urdf")
+        self.robot      = p.loadURDF("/home/zheng/bullet3/data/r2d2.urdf", TARGET_START_POSE.copy(), useFixedBase=False)
+        self.redball    = p.loadURDF("/home/zheng/bullet3/data/sphere2red.urdf", [0,0,0.5])
         self.robot_start_pos = p.getBasePositionAndOrientation(self.robot)[0]
         self.robot_start_ori = p.getBasePositionAndOrientation(self.robot)[1]
         self.total_reward = 0
