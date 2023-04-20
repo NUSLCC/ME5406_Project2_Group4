@@ -24,6 +24,9 @@ source $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
 ```
+LD_LIBRARY_PATH=/content/conda-env/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+```
+```
 # If you want to train models
 python3 train_DQN.py
 python3 train_PPO.py
