@@ -9,7 +9,7 @@ import random
 import visualkeras
 from env import Env, NUM_ACTIONS
 
-# log_path  = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/log/"
+# log_path  = "./log/"
 # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_path, histogram_freq=0)
 
 class DQNAgent_binary:
