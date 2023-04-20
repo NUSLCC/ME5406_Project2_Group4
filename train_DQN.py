@@ -3,10 +3,9 @@ Class: ME5406
 Author: Liu Chenchen
 """
 import time
-# from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS_RGB, NUM_CHANNELS_BINARY, NUM_FRAMES
+from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS_RGB, NUM_CHANNELS_BINARY, NUM_FRAMES
 from DQN_rgb import DQNAgent_rgb
 from DQN_binary import DQNAgent_binary
-from env_circle import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS_RGB, NUM_CHANNELS_BINARY, NUM_FRAMES
 
 TRAIN_BINARY = True
 TRAIN_EPS = 500
