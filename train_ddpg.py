@@ -8,7 +8,7 @@ import numpy as np
 
 from env import Env
 
-from ddpg_v5 import DDPG
+from DDPG import DDPG
 
 act = 0
 
