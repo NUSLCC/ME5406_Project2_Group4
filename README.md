@@ -1,12 +1,10 @@
-# me5406-project-2
+# ME5406-Project-2
 Chaser RL Pybullet
-
-ROS: Noetic
 ```
-conda create -n me54062_env python=3.8
+conda create -n me5406_2_env python=3.8
 ```
 ```
-conda activate me54062_env
+conda activate me5406_2_env
 ```
 ```
 pip install -r requirements.txt
@@ -15,21 +13,11 @@ pip install -r requirements.txt
 conda install libffi==3.3
 ```
 ```
-catkin_make
+# If you want to train models
+python3 train_DQN.py
+python3 train_PPO.py
 ```
 ```
-#Open a new terminal
-source devel/setup.bash
-roscore
-```
-```
-#Open a new terminal
-source devel/setup.bash
-python base.py
-```
-```
-#Open a new terminal
-source devel/setup.bash
-python move_camera.py
-```
-```
+# If you want to test models
+python3 test_DQN.py
+python3 test_PPO.py
