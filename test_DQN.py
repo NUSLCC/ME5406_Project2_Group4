@@ -9,16 +9,16 @@ from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES, NUM_CHANNELS_RGB, NUM_CHA
 from DQN_rgb import DQNAgent_rgb
 from DQN_binary import DQNAgent_binary
 
-TEST_BINARY = True
+TEST_BINARY = False
 
 if TEST_BINARY:
     # Create the agent that has DQN model for binary image
     agent = DQNAgent_binary(state_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES*NUM_CHANNELS_BINARY))
-    model_path  = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/dqn_model_binary.h5"
+    model_path  = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval.h5"
 else:
     # Create the agent that has DQN model for RGB image
     agent = DQNAgent_rgb(state_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES*NUM_CHANNELS_RGB))
-    model_path  = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/dqn_model_rgb.h5"
+    model_path  = "./DQN_weights/dqn_model_rgb.h5"
 
 # Load the model by path
 if not os.path.exists(model_path):
@@ -33,9 +33,6 @@ state_add_none = np.expand_dims(state, axis=0)
 total_reward = 0
 step_count = 0
 action_list = []
-# distance_list_rob = []
-# distance_list_cam = []
-# reward_list = []
 
 while not done:
     predicted_Q_values = model.predict(state_add_none)
@@ -48,16 +45,6 @@ while not done:
     step_count += 1
     action_list.append(action)
 
-    # distance_list_rob.append(agent.env.robot_current_pose[1])
-    # distance_list_cam.append(agent.env.camera_pos[1])
-    # reward_list.append(reward)
-    
-
 print("Total reward in test:", total_reward)
 print("Total steps in test:", step_count)
 print("Action list:", action_list)
-# for each in range(len(distance_list_cam)):
-#     print(abs(distance_list_cam[each]-distance_list_rob[each]))
-#     print(reward_list[each])
-#     print(action_list[each])
-#     print("-----------------------")

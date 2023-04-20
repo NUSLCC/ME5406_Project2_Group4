@@ -27,9 +27,10 @@ class DQNAgent_rgb:
         self.minibatch_size = 32
         self.online_model = self.build_model()
         self.target_model = self.build_model()
+        self.online_model_update_interval = 10
         self.target_model_update_interval = 100
         self.replay_buffer = deque(maxlen=self.replay_buffer_size)
-        self.save_path = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/"
+        self.save_path = "./DQN_weights/"
 
     """
     Whether you want to output the visualization of the model
@@ -115,7 +116,7 @@ class DQNAgent_rgb:
         return states, actions, rewards, next_states, dones
 
     """
-    Update the online model with the help of target model to improve stability
+    Update the online model in some smaller step interval
     """
     def update_online_model(self):
         # Sample a random minibatch of trasitions from the replay buffer
@@ -135,12 +136,19 @@ class DQNAgent_rgb:
                 # Here we use Q_values_next predicted by target model instead of online model
                 Q_values_targets[i, actions[i]] = rewards[i] + self.gamma * np.max(Q_values_next[i])
         # Update the model using the current states from online model and target Q-values from target model
-        self.online_model.fit(states, Q_values_targets, verbose=0)
+        self.online_model.fit(states, Q_values_targets, verbose=0)# callbacks=[tensorboard_callback])
+
+    """
+    Update the target model in some bigger step interval
+    """
+    def update_target_model(self):
+        self.target_model.set_weights(self.online_model.get_weights())
 
     """
     Train the model with assigned number of episodes and max steps for each episode
     """
     def train(self, num_episodes, max_steps_per_episode):
+        self.update_target_model()
         for episode in range(num_episodes):
             # Get original state by reseting the environment
             state = self.env.reset()
@@ -152,12 +160,13 @@ class DQNAgent_rgb:
                 next_state, reward, done = self.env.step(action)
                 # Add this transition to the replay buffer 
                 self.replay_buffer.append((state, action, reward, next_state, done))
-                # Update the online model only when replay buffer is larger than the size of minibatch
-                if len(self.replay_buffer) >= self.minibatch_size:
+                # Update the online model at some smaller interval
+                # Need to make sure the replay buffer is larger than the size of minibatch
+                if len(self.replay_buffer) >= self.minibatch_size and step % self.online_model_update_interval == 0:
                     self.update_online_model()
-                # Update the target network when step > interval
-                if step % self.target_model_update_interval == 0:
-                    self.target_model.set_weights(self.online_model.get_weights())
+                # Update the target network at some larger interval
+                if len(self.replay_buffer) >= self.minibatch_size and step % self.target_model_update_interval == 0:
+                    self.update_target_model()
                 # Update the state and total reward
                 state = next_state
                 total_reward += reward
