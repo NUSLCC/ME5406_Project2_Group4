@@ -142,8 +142,11 @@ class Critic(nn.Module):
 class DDPG:
     def __init__(self, state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip, has_continuous_action_space, action_std_init=0.6):
         self.has_continuous_action_space = has_continuous_action_space
-        self.state, _, _ = Env.step(self, action=1)
-        self.target_pos = Env.__init__.target_pose()
+        self.env = Env()
+        
+        self.save_path = "/home/zheng/me5406_group4/me5406-project-2/src/me5406/src/"
+
+        
         self.state_ = state
         self.q = 0    # q value for learning
         if has_continuous_action_space:
