@@ -175,7 +175,7 @@ def train():
             action = ddpg_agent.select_action(np.transpose(state, (2, 0, 1)))
             # print("Action: ", action)
             # action_pub.publish(int(action.item()))
-            state, reward, done = env.step(action.item())
+            state, reward, done = env.step(action)
 
             # saving reward and is_terminals
             ddpg_agent.buffer.rewards.append(reward)
