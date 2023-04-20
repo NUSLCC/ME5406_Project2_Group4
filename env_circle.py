@@ -25,6 +25,7 @@ AMPLITUDE           = 5
 NUM_STEPS           = 300
 STEP                = 2 * math.pi / NUM_STEPS
 DELTA_ANGLE         = 2 * np.pi / NUM_STEPS
+NUM_ACTIONS         = 3
 ##############################
 
 class Env:
@@ -46,8 +47,8 @@ class Env:
         self.delta_angle = DELTA_ANGLE
         self.client     = p.connect(p.GUI)
         self.gravity    = p.setGravity(0, 0, -9.81)
-        self.plane      = plane = p.loadURDF("/home/thebird/repos/bullet3/data/plane_with_restitution.urdf")
-        self.robot      = robot = p.loadURDF("/home/thebird/repos/bullet3/data/r2d2.urdf", TARGET_START_POSE.copy(),
+        self.plane      = p.loadURDF("/home/thebird/repos/bullet3/data/plane_with_restitution.urdf")
+        self.robot      = p.loadURDF("/home/thebird/repos/me5406_group4/urdf/r2d2.urdf", TARGET_START_POSE.copy(),
                            useFixedBase=False)
         self.camera = p.computeViewMatrix(self.camera_pos, self.target_pos, self.up_vec)
         self.projection = p.computeProjectionMatrixFOV(self.fov, self.aspect, self.near, 
