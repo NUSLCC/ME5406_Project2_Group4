@@ -44,7 +44,8 @@ class Env:
         self.height     = IMAGE_HEIGHT
         self.num_frames = NUM_FRAMES
         self.delta_angle = DELTA_ANGLE
-        self.client     = p.connect(p.GUI)
+        #self.client     = p.connect(p.GUI)
+        self.client = p.connect(p.DIRECT)
         self.gravity    = p.setGravity(0, 0, -9.81)
         self.plane      = plane = p.loadURDF("/home/thebird/repos/bullet3/data/plane_with_restitution.urdf")
         self.robot      = robot = p.loadURDF("/home/thebird/repos/bullet3/data/r2d2.urdf", TARGET_START_POSE.copy(),

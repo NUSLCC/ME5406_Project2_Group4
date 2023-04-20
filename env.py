@@ -56,11 +56,12 @@ class Env:
         self.width      = IMAGE_WIDTH
         self.height     = IMAGE_HEIGHT
         self.num_frames = NUM_FRAMES
-        # self.client     = p.connect(p.GUI)
-        # self.gravity    = p.setGravity(0, 0, -9.81)
+        #self.client     = p.connect(p.GUI)
+        self.client = p.connect(p.DIRECT)
+        self.gravity    = p.setGravity(0, 0, -9.81)
         self.plane      = plane = p.loadURDF("/home/zheng/bullet3/data/plane_with_restitution.urdf")
         self.robot      = robot = p.loadURDF("/home/zheng/bullet3/data/r2d2.urdf", TARGET_START_POSE.copy(), useFixedBase=False)
-        self.redball    = p.loadURDF("/home/zheng/bullet3/data/sphere2red.urdf", [0,0,0.5])
+        #self.redball    = p.loadURDF("/home/zheng/bullet3/data/sphere2red.urdf", [0,0,0.5])
         self.camera = p.computeViewMatrix(self.camera_pos, self.target_pos, self.up_vec)
         self.projection = p.computeProjectionMatrixFOV(self.fov, self.aspect, self.near, 
                                                        self.far) # you need this for 

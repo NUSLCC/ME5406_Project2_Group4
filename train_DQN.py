@@ -6,6 +6,7 @@ import time
 from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS_RGB, NUM_CHANNELS_BINARY, NUM_FRAMES
 from DQN_rgb import DQNAgent_rgb
 from DQN_binary import DQNAgent_binary
+import env
 
 TRAIN_BINARY = True
 TRAIN_EPS = 500
