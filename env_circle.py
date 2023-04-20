@@ -47,7 +47,7 @@ class Env:
         self.delta_angle = DELTA_ANGLE
         self.client     = p.connect(p.GUI)
         self.gravity    = p.setGravity(0, 0, -9.81)
-        self.plane      = p.loadURDF("./urdf/plane_with_restitution.urdf")
+        self.plane      = p.loadURDF("./urdf/plane100.urdf")
         self.robot      = p.loadURDF("./urdf/r2d2.urdf", TARGET_START_POSE.copy(),
                            useFixedBase=False)
         self.camera = p.computeViewMatrix(self.camera_pos, self.target_pos, self.up_vec)
@@ -214,3 +214,4 @@ class Env:
         self.move_robot()
         return np.array(observation), reward, done
     
+# env = Env()
