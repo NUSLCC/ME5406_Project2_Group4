@@ -213,5 +213,3 @@ class Env:
         # Move the robot for each action
         self.move_robot()
         return np.array(observation), reward, done
-    
-# env = Env()
