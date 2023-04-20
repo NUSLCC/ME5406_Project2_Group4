@@ -1,9 +1,15 @@
+"""
+Class: ME5406
+Author: Zheng Jiezhi
+Reference: https://github.com/DLR-RM/stable-baselines3
+"""
+
 import torch
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
 import tensorflow as tf
-from env import Env
+from env import Env, NUM_ACTIONS
 
 ################################## set device ##################################
 # set device to cpu or cuda
