@@ -14,11 +14,11 @@ TEST_BINARY = True
 if TEST_BINARY:
     # Create the agent that has DQN model for binary image
     agent = DQNAgent_binary(state_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES*NUM_CHANNELS_BINARY))
-    model_path  = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/dqn_model_binary.h5"
+    model_path  = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval.h5"
 else:
     # Create the agent that has DQN model for RGB image
     agent = DQNAgent_rgb(state_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES*NUM_CHANNELS_RGB))
-    model_path  = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/dqn_model_rgb.h5"
+    model_path  = "./DQN_weights/dqn_model_rgb.h5"
 
 # Load the model by path
 if not os.path.exists(model_path):

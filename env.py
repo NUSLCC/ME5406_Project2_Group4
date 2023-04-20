@@ -41,9 +41,9 @@ class Env:
         self.num_channels = NUM_CHANNELS_RGB
         self.client     = p.connect(p.GUI)
         self.gravity    = p.setGravity(0, 0, -9.81)
-        self.plane      = p.loadURDF("/home/lcc/me5406_part2/me5406-project-2/urdf/data/plane100.urdf")
-        self.robot      = p.loadURDF("/home/lcc/me5406_part2/me5406-project-2/urdf/data/r2d2.urdf", TARGET_START_POSE.copy(), useFixedBase=False)
-        self.redball    = p.loadURDF("/home/lcc/me5406_part2/me5406-project-2/urdf/data/sphere2red.urdf", [0,0,0.5])
+        self.plane      = p.loadURDF("./urdf/plane100.urdf")
+        self.robot      = p.loadURDF("./urdf/r2d2.urdf", TARGET_START_POSE.copy(), useFixedBase=False)
+        self.redball    = p.loadURDF("./urdf/sphere2red.urdf", [0,0,0.5])
         self.robot_start_pos = p.getBasePositionAndOrientation(self.robot)[0]
         self.robot_start_ori = p.getBasePositionAndOrientation(self.robot)[1]
         self.total_reward = 0

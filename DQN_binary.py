@@ -9,8 +9,8 @@ import random
 import visualkeras
 from env import Env, NUM_ACTIONS
 
-log_path  = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/log/"
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_path, histogram_freq=0)
+# log_path  = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/log/"
+# tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_path, histogram_freq=0)
 
 class DQNAgent_binary:
     """
@@ -33,7 +33,7 @@ class DQNAgent_binary:
         self.online_model_update_interval = 10
         self.target_model_update_interval = 100
         self.replay_buffer = deque(maxlen=self.replay_buffer_size)
-        self.save_path = "/home/lcc/me5406_part2/me5406-project-2/src/me5406/src/"
+        self.save_path = "./DQN_weights/"
 
     """
     Whether you want to output the visualization of the model
