@@ -244,7 +244,6 @@ def train():
         i_episode += 1
 
     log_f.close()
-    env.close()
 
     # print total training time
     print("============================================================================================")
