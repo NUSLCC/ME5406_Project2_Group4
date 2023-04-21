@@ -1,6 +1,6 @@
 """
 Class: ME5406
-Author: Zheng Jiezhi, Ravi Girish
+Author: Zheng Jiezhi
 Reference: https://github.com/DLR-RM/stable-baselines3 
 reference from PPO.py
 """
