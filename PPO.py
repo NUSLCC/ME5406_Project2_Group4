@@ -26,6 +26,10 @@ print("=========================================================================
 
 
 ################################## PPO Policy ##################################
+'''
+Replay buffer is different from the original code. It now support for sampling state action parirs
+from the buffer that can be used to train the model. 
+'''
 class RolloutBuffer:
     
     def __init__(self):
@@ -55,8 +59,11 @@ class ActorCritic(nn.Module):
         if has_continuous_action_space:
             self.action_dim = action_dim
             self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(device)
-        # Actor Network
-        # TODO, check the actor critic network and on how to change the nn size
+        '''
+        This the actor network. It has been modified from the original code to take in the input of 
+        (NUM_FRAMES, NUM_CHANNELS, IMAGE_WIDTH, IMAGE_HEIGHT) and output (1, NUM_ACTIONS) tensor. From
+        the output the best action is the index with the highest value. 
+        '''
         self.actor = nn.Sequential(
                 nn.Conv2d(1, 32, kernel_size=8, stride=4),
                 nn.Tanh(),
@@ -67,7 +74,9 @@ class ActorCritic(nn.Module):
                 nn.Linear(49, action_dim),
                 nn.Softmax(dim=-1)
             )
-        # Critic Network
+        '''
+        This is the critic network. It takes in the states and outputs the q_values of the states. 
+        '''
         self.critic = nn.Sequential(
                     nn.Conv2d(1, 16, kernel_size=8, stride=4),
                     nn.Tanh(),
@@ -76,25 +85,12 @@ class ActorCritic(nn.Module):
                     nn.Flatten(0),
                     nn.Softmax(dim=-1)
                 )
+        ''' This is to ensure that the values are floating point type to allow the tensor to run the loss function. '''
         self.critic.float()
-
-    def set_action_std(self, new_action_std):
-        if self.has_continuous_action_space:
-            self.action_var = torch.full((self.action_dim,), new_action_std * new_action_std).to(device)
-        else:
-            print("--------------------------------------------------------------------------------------------")
-            print("WARNING : Calling ActorCritic::set_action_std() on discrete action space policy")
-            print("--------------------------------------------------------------------------------------------")
-
-    def forward(self, state):
-        state = state
-        value = nn.relu(self.critic(state))
-        
-        policy_dist = nn.relu(self.actor(state))
-        # policy_dist = nn.softmax(self.actor_linear2(policy_dist), dim=1)
-
-        return value, policy_dist
     
+    '''
+    This function returns the action for the input state.
+    '''
     def act(self, state):
 
         action_probs = self.actor(state)
@@ -107,6 +103,9 @@ class ActorCritic(nn.Module):
 
         return action.detach(), action_logprob.detach(), state_val.detach()
     
+    '''
+    This function evalutes the state-action pairs and returns the log-probabilities. 
+    '''
     def evaluate(self, state, action):
 
         if self.has_continuous_action_space:
@@ -120,16 +119,11 @@ class ActorCritic(nn.Module):
             if self.action_dim == 1:
                 action = action.reshape(-1, self.action_dim)
         else:
-            # get the action probs for the states 
-            # then do the categtorch.nan_to_num(orical on it. 
-            # import pdb; pdb.set_trace();
-            # torch.unsqueeze(state[0], dim=0).shape
             action_probs = self.actor(torch.unsqueeze(state, dim=1))
             dist = Categorical(action_probs)
 
         action_logprobs = dist.log_prob(action)
         dist_entropy = dist.entropy()
-        # import pdb; pdb.set_trace()
         state_values = self.critic(torch.unsqueeze(state, dim=1))
         
         return action_logprobs, state_values, dist_entropy
@@ -147,9 +141,9 @@ class PPO:
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
         self.minibatch_size = MINIBATCH_SIZE
-        
+        # Initialize the replay buffer. 
         self.buffer = RolloutBuffer()
-
+        # Initialize the Actor-Critic PPO network
         self.policy = ActorCritic(state_dim, action_dim, has_continuous_action_space, action_std_init).to(device)
         self.optimizer = torch.optim.Adam([
                         {'params': self.policy.actor.parameters(), 'lr': lr_actor},
@@ -161,32 +155,9 @@ class PPO:
         
         self.MseLoss = nn.MSELoss().float()
 
-    def set_action_std(self, new_action_std):
-        if self.has_continuous_action_space:
-            self.action_std = new_action_std
-            self.policy.set_action_std(new_action_std)
-            self.policy_old.set_action_std(new_action_std)
-        else:
-            print("--------------------------------------------------------------------------------------------")
-            print("WARNING : Calling PPO::set_action_std() on discrete action space policy")
-            print("--------------------------------------------------------------------------------------------")
-
-    def decay_action_std(self, action_std_decay_rate, min_action_std):
-        print("--------------------------------------------------------------------------------------------")
-        if self.has_continuous_action_space:
-            self.action_std = self.action_std - action_std_decay_rate
-            self.action_std = round(self.action_std, 4)
-            if (self.action_std <= min_action_std):
-                self.action_std = min_action_std
-                print("setting actor output action_std to min_action_std : ", self.action_std)
-            else:
-                print("setting actor output action_std to : ", self.action_std)
-            self.set_action_std(self.action_std)
-
-        else:
-            print("WARNING : Calling PPO::decay_action_std() on discrete action space policy")
-        print("--------------------------------------------------------------------------------------------")
-
+    '''
+    Select action.
+    '''
     def select_action(self, state):
         
         with torch.no_grad():
@@ -197,14 +168,13 @@ class PPO:
         self.buffer.actions.append(action)
         self.buffer.logprobs.append(action_logprob)
         self.buffer.state_values.append(state_val)
-        # print(action)
-        # return action.item()
         return action[0]
     
+    '''
+    Class method to sample a batch of states/actions from the buffer for evaluation.
+    '''
     def sample_minibatch(self):
         list_of_samples_with_index = random.sample(list(enumerate(self.buffer.states)), self.minibatch_size)
-        # minibatch = random.sample(self.buffer.states, self.minibatch_size)
-        # The format of each transition is (state, action, reward, next_state, done)
         states = []
         actions = []
         logprobs = []
@@ -227,15 +197,13 @@ class PPO:
         for reward, is_terminal in zip(reversed(self.buffer.rewards), reversed(self.buffer.is_terminals)):
             if is_terminal:
                 discounted_reward = 0
+            # Standard Update function
             discounted_reward = reward + (self.gamma * discounted_reward)
             rewards.insert(0, discounted_reward)
             
         # Normalizing the rewards
         rewards = torch.tensor(rewards, dtype=torch.float32).to(device)
-        # rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
-        states, actions, logprobs, state_values, rewards, is_terminals = self.sample_minibatch()
-        # convert list to tensor
-        
+        states, actions, logprobs, state_values, rewards, is_terminals = self.sample_minibatch()        
         old_states = torch.squeeze(torch.stack(states, dim=0)).detach().to(device)
         old_actions = torch.squeeze(torch.stack(actions, dim=0)).detach().to(device)
         old_logprobs = torch.squeeze(torch.stack(logprobs, dim=0)).detach().to(device)
@@ -252,7 +220,6 @@ class PPO:
             logprobs, state_values, dist_entropy = self.policy.evaluate(old_states, old_actions)
 
             # match state_values tensor dimensions with rewards tensor
-            # import pdb; pdb.set_trace();
             state_values = torch.squeeze(state_values)
             
             # Finding the ratio (pi_theta / pi_theta__old)
