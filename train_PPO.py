@@ -11,11 +11,12 @@ from datetime import datetime
 import torch
 import numpy as np
 
-from env_circle import Env
+from env_circle import Env, NUM_ACTIONS
 
 from PPO import PPO
 
 act = 0
+END_TIMESTEPS = 90000
 
 ################################### Training ###################################
 def train():
@@ -27,16 +28,16 @@ def train():
     state_dim = (84, 84, 1)
 
     # action space dimension
-    action_dim = 3
+    action_dim = NUM_ACTIONS
 
     has_continuous_action_space = False  # continuous action space; else discrete
 
-    max_ep_len = 300                   # max timesteps in one episode
-    max_training_timesteps = int(45000)   # break training loop if timeteps > max_training_timesteps
+    max_ep_len = 1000                   # max timesteps in one episode
+    max_training_timesteps = int(END_TIMESTEPS)   # break training loop if timeteps > max_training_timesteps
 
-    print_freq = max_ep_len * 10        # print avg reward in the interval (in num timesteps)
+    print_freq = max_ep_len * 3        # print avg reward in the interval (in num timesteps)
     log_freq = max_ep_len * 2           # log avg reward in the interval (in num timesteps)
-    save_model_freq = int(1e5)          # save model frequency (in num timesteps)
+    save_model_freq = int(END_TIMESTEPS-1)          # save model frequency (in num timesteps)
 
     action_std = 0.6                    # starting std for action distribution (Multivariate Normal)
     action_std_decay_rate = 0.05        # linearly decay action_std (action_std = action_std - action_std_decay_rate)
@@ -135,7 +136,6 @@ def train():
         print("--------------------------------------------------------------------------------------------")
         print("setting random seed to ", random_seed)
         torch.manual_seed(random_seed)
-        env.seed(random_seed)
         np.random.seed(random_seed)
     #####################################################
 
@@ -170,16 +170,11 @@ def train():
     while time_step <= max_training_timesteps:
 
         state = env.reset()
-        # print(np.transpose(state, (2, 0, 1)))
         current_ep_reward = 0
 
         for t in range(1, max_ep_len+1):
 
-            # select action with policy
-            # action = ppo_agent.select_action(state)
             action = ppo_agent.select_action(np.transpose(state, (2, 0, 1)))
-            # print("Action: ", action)
-            # action_pub.publish(int(action.item()))
             state, reward, done = env.step(action.item())
 
             # saving reward and is_terminals
@@ -244,7 +239,6 @@ def train():
         i_episode += 1
 
     log_f.close()
-    env.close()
 
     # print total training time
     print("============================================================================================")
