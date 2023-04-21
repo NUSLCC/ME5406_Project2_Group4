@@ -1,11 +1,12 @@
 """
 Class: ME5406
-Author: Zheng Jiezhi, Ravi Girish
+Author: Zheng Jiezhi
 Reference: https://github.com/DLR-RM/stable-baselines3 
 reference from PPO.py
 """
 
 import torch
+import numpy as np
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
@@ -78,7 +79,27 @@ class Actor(nn.Module):
 
         return action.detach(), action_logprob.detach(), state_val.detach()
     
+    def evaluate(self, state, action):
 
+        if self.has_continuous_action_space:
+            action_mean = self.actor(state)
+            
+            action_var = self.action_var.expand_as(action_mean)
+            cov_mat = torch.diag_embed(action_var).to(device)
+            dist = MultivariateNormal(action_mean, cov_mat)
+            
+            # For Single Action Environments.
+            if self.action_dim == 1:
+                action = action.reshape(-1, self.action_dim)
+        else:
+            action_probs = self.actor(torch.unsqueeze(state, dim=1))
+            dist = Categorical(action_probs)
+
+        action_logprobs = dist.log_prob(action)
+        dist_entropy = dist.entropy()
+        state_values = self.actor(torch.unsqueeze(state, dim=1))
+        
+        return action_logprobs, state_values, dist_entropy
 
 class Critic(nn.Module):
     def __init__(self, state_dim, action_dim, has_continuous_action_space, action_std_init):
@@ -215,7 +236,9 @@ class DDPG:
         old_state_values = torch.squeeze(torch.stack(self.buffer.state_values, dim=0)).detach().to(device)
         
         # calculate advantages
-        advantages = rewards.detach() - old_state_values.detach()
+        print("check reward size:", rewards[0].shape)
+        print("check state values size:", old_state_values[0][0].shape)
+        advantages = rewards.detach()[0] - old_state_values.detach()[0][0]
 
         # Optimize policy for K epochs
         for _ in range(self.K_epochs):
@@ -234,7 +257,12 @@ class DDPG:
             surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
 
             # final loss of clipped objective PPO
-            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values[0], rewards) - 0.01 * dist_entropy
+            print("surr1:", surr1.shape)
+            print("surr2:", surr2.shape)
+            print("state values:", state_values.shape)
+            print("reward:", reward.shape)
+            print("dist entropy:", dist_entropy.shape)
+            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy[0][0]
             
             # take gradient step
             self.optimizer.zero_grad()
