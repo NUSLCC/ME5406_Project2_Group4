@@ -9,7 +9,6 @@ Zheng Jiezhi (DDPG)
 ```
 conda create -n me5406_2_env python=3.8
 conda activate me5406_2_env
-conda install libffi==3.3
 ```
 
 Note: Do this for libcudnn.8
