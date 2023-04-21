@@ -81,18 +81,23 @@ class Env:
             return rgb_img
         
     """
-    The reward function is actually depends on the absolute distance between robot and camera on 
-    Y-axis. Currently we have four stages: Good, Okay, Half_view_range and Bad. The intuition of 
-    the reward function is that the reward will be higher when distance is smaller. If the object
-    is slip out of Okay level, there will be a big penalty, if the object is out of the view angle,
-    there will be a huge penalty which can end the episode directly
+    The reward function depends on whether the target lies within the FOV of the camera. 
+
+                    x
+                x                                        
+            x                                             
+        x                   xxxxxxxxxxx                                 
+     x                     x           x                                  
+xxxxx                      x           x                                    
+     x                     x           x                                   
+        x                   xxxxxxxxxxx                              
+            x           
+                x
+                    x
+                            
     """
     def get_reward(self):
         current_robot_pos = p.getBasePositionAndOrientation(self.robot)[0]
-        # print(self.is_point_in_fov(self.camera_pos, self.target_pos, current_robot_pos))
-        current_robot_y   = current_robot_pos[1]
-        current_camera_y  = self.camera_pos[1]
-        absolute_distance_y = abs(current_robot_y - current_camera_y)
         frame = self.is_point_in_fov(self.camera_pos, self.target_pos, current_robot_pos)
         if frame == 0:
             return 40
@@ -116,6 +121,9 @@ class Env:
                 observation[:, :, :, i] = np.array(self.get_image())
                 return observation
         
+    '''
+    Function to check if the target lies within the FOV and categorize the state based on where it lies on the frame. 
+    '''
     def is_point_in_fov(self, camera_pos, camera_dir, point_pos, fov = FOV):
         # Calculate vector from camera position to point position
         rel_pos = (point_pos[0] - camera_pos[0], point_pos[1] - camera_pos[1], point_pos[2] - camera_pos[2])
