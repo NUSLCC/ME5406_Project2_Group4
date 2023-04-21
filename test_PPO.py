@@ -80,7 +80,7 @@ def test():
     checkpoint_path = directory + "PPO_{}_{}_{}.pth".format(env_name, random_seed, run_num_pretrained)
     print("loading network from : " + checkpoint_path)
 
-    ppo_agent.load("/home/thebird/repos/me5406_group4_backup_2/PPO_preTrained/chaser/PPO_chaser_0_0.pth")
+    ppo_agent.load("./PPO_preTrained/chaser/PPO_Circle.pth")
 
     print("--------------------------------------------------------------------------------------------")
 
