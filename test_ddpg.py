@@ -85,8 +85,8 @@ def test():
     print("loading network from : " + checkpoint_path)
     #  DDPG_preTrained/chaser/DDPG_chaser_0_0.pth
     # ddpg_agent.load("/home/thebird/repos/me5406_group4_backup_2/DDPG_preTrained/chaser/DDPG_chaser_0_0.pth")
-    ddpg_agent.load(checkpoint_path)
-
+    # ddpg_agent.load(checkpoint_path)
+    ddpg_agent.load("./DDPG_preTrained/chaser/DDPG_finalweight_0_0.pth")
     print("--------------------------------------------------------------------------------------------")
 
     test_running_reward = 0
