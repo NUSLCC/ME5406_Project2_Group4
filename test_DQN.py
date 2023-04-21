@@ -9,18 +9,24 @@ from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES, NUM_CHANNELS_RGB, NUM_CHA
 from DQN_rgb import DQNAgent_rgb
 from DQN_binary import DQNAgent_binary
 
+# True for binary image testing, False for RGB image testing
 TEST_BINARY = True
 
 if TEST_BINARY:
     # Create the agent that has DQN model for binary image
     agent = DQNAgent_binary(state_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES*NUM_CHANNELS_BINARY))
     # Before you change model, remember to adjust IMAGE HEIGHT AND IMAGE WIDTH in the env as well.
-    model_path  = "./DQN_weights/dqn_binary_4000thresh_5actions_84x84_10&100interval.h5"
-    #model_path  = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval.h5"
+    model_path = "./DQN_weights/dqn_binary_4000thresh_5actions_84x84_10&100interval.h5"
+    # Make sure you change the IMAGE_HEIGHT & IMAGE_WIDTH in env first before uncomment
+    # model_path = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval.h5"
+    # model_path = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval_100minibatch.h5"
+    
 else:
     # Create the agent that has DQN model for RGB image
     agent = DQNAgent_rgb(state_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES*NUM_CHANNELS_RGB))
-    model_path  = "./DQN_weights/dqn_model_rgb.h5"
+    model_path = "./DQN_weights/dqn_rgb_4000thresh_5actions_84x84_10&100interval.h5"
+    # Make sure you change the IMAGE_HEIGHT & IMAGE_WIDTH in env first before uncomment
+    # model_path = "./DQN_weights/dqn_rgb_4000thresh_5actions_48x48_10&100_4000eps.h5"
 
 # Load the model by path
 if not os.path.exists(model_path):
