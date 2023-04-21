@@ -1,3 +1,8 @@
+"""
+Class: ME5406
+Author: Zheng Jiezhi
+Reference: https://github.com/DLR-RM/stable-baselines3
+"""
 import os
 import glob
 import time
@@ -8,7 +13,7 @@ import numpy as np
 
 from env import Env
 
-from ddpg_v5 import DDPG
+from DDPG import DDPG
 
 act = 0
 
