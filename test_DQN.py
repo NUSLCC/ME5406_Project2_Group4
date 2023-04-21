@@ -19,9 +19,11 @@ if TEST_BINARY:
     model_path = "./DQN_weights/dqn_binary_4000thresh_5actions_84x84_10&100interval.h5"
     # Make sure you change the IMAGE_HEIGHT & IMAGE_WIDTH in env first before uncomment
     # Select the model that you want to test
-    # model_path = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval.h5"
+    # model_path = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval_32minibatch.h5"
     # model_path = "./DQN_weights/dqn_binary_4000thresh_5actions_48x48_10&100interval_100minibatch.h5"
+    # model_path = "./DQN_weights/dqn_binary_3000thresh_5actions_48x48_1&50interval.h5"
     # model_path = "./DQN_weights/dqn_binary_2000thresh_3actions_48x48_1&50interval.h5"
+    
 else:
     # Create the agent that has DQN model for RGB image
     agent = DQNAgent_rgb(state_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES*NUM_CHANNELS_RGB))
