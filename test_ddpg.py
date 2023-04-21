@@ -78,13 +78,13 @@ def test():
 
     random_seed = 0             #### set this to load a particular checkpoint trained on random seed
     run_num_pretrained = 0      #### set this to load a particular checkpoint num
-
+   
     directory = "DDPG_preTrained" + '/' + env_name + '/'
     checkpoint_path = directory + "DDPG_{}_{}_{}.pth".format(env_name, random_seed, run_num_pretrained)
     print("loading network from : " + checkpoint_path)
-
+    #  DDPG_preTrained/chaser/DDPG_chaser_0_0.pth
     # ddpg_agent.load("/home/thebird/repos/me5406_group4_backup_2/DDPG_preTrained/chaser/DDPG_chaser_0_0.pth")
-    ddpg_agent.load("/home/zheng/me5406_group4/DDPG_Line_42000_steps.pth")
+    ddpg_agent.load(checkpoint_path)
 
     print("--------------------------------------------------------------------------------------------")
 
