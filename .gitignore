@@ -1,5 +1,3 @@
 PPO_logs/
 DDPG_logs/
 __pycache__/
-PPDG_logs/
-DDPG_logs/

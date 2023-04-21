@@ -1,6 +1,7 @@
 """
 Class: ME5406
 Author: Liu Chenchen
+Note: Copy this outside of the utility folder to generate images
 """
 from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS_RGB, NUM_CHANNELS_BINARY, NUM_FRAMES
 from DQN_rgb import DQNAgent_rgb

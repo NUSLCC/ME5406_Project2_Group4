@@ -1,3 +1,7 @@
+"""
+Class: ME5406
+Author: Liu Chenchen
+"""
 import math
 import time
 AMPLITUDE = 4
