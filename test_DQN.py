@@ -9,7 +9,7 @@ from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_FRAMES, NUM_CHANNELS_RGB, NUM_CHA
 from DQN_rgb import DQNAgent_rgb
 from DQN_binary import DQNAgent_binary
 
-TEST_BINARY = True
+TEST_BINARY = False
 
 if TEST_BINARY:
     # Create the agent that has DQN model for binary image

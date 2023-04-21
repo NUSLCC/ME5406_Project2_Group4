@@ -7,8 +7,8 @@ from env import IMAGE_HEIGHT, IMAGE_WIDTH, NUM_CHANNELS_RGB, NUM_CHANNELS_BINARY
 from DQN_rgb import DQNAgent_rgb
 from DQN_binary import DQNAgent_binary
 
-TRAIN_BINARY = True
-TRAIN_EPS = 500
+TRAIN_BINARY = False
+TRAIN_EPS = 4000
 
 if TRAIN_BINARY:
     # Create the agent that train DQN model with binary images
