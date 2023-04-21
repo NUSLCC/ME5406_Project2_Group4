@@ -44,6 +44,7 @@ pip install -r requirements.txt
 ```
 python3 test_DQN.py
 python3 test_PPO.py
+python3 test_DDPG.py
 ```
 
 ##### 2. Train the model manually
