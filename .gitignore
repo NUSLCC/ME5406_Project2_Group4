@@ -4,4 +4,3 @@ __pycache__/
 PPDG_logs/
 DDPG_logs/
 PPO_preTrained/
-DDPG_preTrained/
